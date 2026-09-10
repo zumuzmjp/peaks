@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg: #0b0d10;
+  --bg-elevated: #111418;
+  --panel: #14181d;
+  --panel-2: #1a1f26;
+  --border: #262c35;
+  --border-strong: #343c47;
+  --text: #e8ebf0;
+  --muted: #8a93a3;
+  --faint: #5b6472;
+  --accent: #f4f6f8;
+  --accent-text: #0b0d10;
+  --chat: #a78bfa;
+  --chat-soft: rgba(167, 139, 250, 0.18);
+  --audio: #fbbf24;
+  --audio-soft: rgba(251, 191, 36, 0.18);
+  --both: #34d399;
+  --both-soft: rgba(52, 211, 153, 0.18);
+  --danger: #f87171;
+  --ring: rgba(244, 246, 248, 0.35);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-mono,
+.tabular {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: rgba(167, 139, 250, 0.35);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+input[type="range"] {
+  accent-color: var(--text);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+}
+
+@keyframes peaks-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.animate-peaks-pulse {
+  animation: peaks-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes peaks-rise {
+  from {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.animate-rise {
+  animation: peaks-rise 0.25s ease-out both;
+}

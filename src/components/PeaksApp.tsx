@@ -114,7 +114,7 @@ export function PeaksApp() {
       </header>
 
       <Panel className="p-4 sm:p-5">
-        <UrlForm busy={busy} liveEnabled={liveEnabled} initial={initialRequest} onSubmit={onSubmit} />
+        <UrlForm key={job?.id ?? "new"} busy={busy} liveEnabled={liveEnabled} initial={job?.request ?? initialRequest} onSubmit={onSubmit} />
       </Panel>
 
       {(phase === "submitting" || phase === "running" || phase === "cancelled") && <ProgressPanel job={job} phase={phase} onCancel={cancel} />}

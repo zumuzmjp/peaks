@@ -51,7 +51,9 @@ export function buildHeadline(p: {
 }): string {
   const chatPart =
     p.chatMultiplier >= 1.5
-      ? `Chat surged ${formatMultiplier(p.chatMultiplier)} above baseline (${Math.round(p.chatRatePerMin)} msg/min)`
+      ? p.chatMultiplier >= 20
+        ? `Chat went from quiet to ${Math.round(p.chatRatePerMin)} msg/min`
+        : `Chat surged ${formatMultiplier(p.chatMultiplier)} above baseline (${Math.round(p.chatRatePerMin)} msg/min)`
       : null;
   const audioPart =
     p.loudnessDeltaDb >= 2 ? `audio jumped +${p.loudnessDeltaDb.toFixed(1)} dB` : null;
@@ -168,8 +170,11 @@ export function rankPeaks(input: RankInput): Peak[] {
       suggestedOut = Math.min(durationSeconds, suggestedIn + options.minClipSeconds);
     }
 
-    const chatRatePerMin = input.chatRate[peakBin];
-    const chatBaselinePerMin = input.chatBaseline[peakBin];
+    // Report chat at the strongest chat bin of the moment, not wherever the
+    // combined score happened to peak.
+    const chatBin = chatSpike ? chatSpike.peakBin : peakBin;
+    const chatRatePerMin = input.chatRate[chatBin];
+    const chatBaselinePerMin = input.chatBaseline[chatBin];
     const chatMultiplier = chatBaselinePerMin > 0.5 ? chatRatePerMin / chatBaselinePerMin : chatRatePerMin > 0 ? 99 : 1;
 
     let loudnessDb = -Infinity;

@@ -30,6 +30,11 @@ export interface AnalysisOptions {
   /** Z-score thresholds for a bin to count as spiking. */
   chatThreshold: number;
   audioThreshold: number;
+  /**
+   * Chat must reach this rate (messages per minute) for a bin to count as a
+   * chat spike, so three messages in a dead chat don't register. Default 24.
+   */
+  minChatPerMin: number;
   /** Two peaks closer than this (seconds) are merged. Default 45. */
   mergeGapSeconds: number;
   /** Maximum peaks returned. Default 40. */

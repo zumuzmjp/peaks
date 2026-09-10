@@ -24,6 +24,8 @@ export async function fetchMetadata(source: ParsedSource, opts: YtDlpOptions): P
   const { stdout } = await run(opts.ytDlpPath, {
     args: ["-J", "--no-warnings", "--no-playlist", ...opts.extraArgs, source.canonicalUrl],
     signal: opts.signal,
+    // YouTube metadata runs to several hundred kB because of the format list.
+    maxStdoutBytes: 50_000_000,
   });
   let info: Record<string, unknown>;
   try {

@@ -11,6 +11,8 @@ export interface RunOptions {
   onStderr?: (line: string) => void;
   /** Reject when the process exits non-zero. Default true. */
   failOnExit?: boolean;
+  /** Bytes of stdout to keep for the result. Default 200 kB. */
+  maxStdoutBytes?: number;
 }
 
 export interface RunResult {
@@ -41,7 +43,7 @@ export function run(command: string, opts: RunOptions): Promise<RunResult> {
     let stderr = "";
     let outRest = "";
     let errRest = "";
-    const maxKeep = 200_000;
+    const maxKeep = opts.maxStdoutBytes ?? 200_000;
 
     child.stdout.setEncoding("utf8");
     child.stderr.setEncoding("utf8");

@@ -21,6 +21,7 @@ export const DEFAULT_OPTIONS: AnalysisOptions = {
   audioStepSeconds: 2,
   chatThreshold: 2.5,
   audioThreshold: 2.2,
+  minChatPerMin: 24,
   mergeGapSeconds: 45,
   maxPeaks: 40,
   minClipSeconds: 20,
@@ -87,10 +88,13 @@ export function analyze(input: AnalyzeInput): AnalysisResult {
   const audio = maxPerBin(fine, fineDb, audioDb.length, step, bin);
 
   const combined = chat.z.map((cz, i) =>
-    combinedScore(cz, audio.z[i], options.chatThreshold, options.audioThreshold)
+    combinedScore(chatSmoothed[i] >= options.minChatPerMin ? cz : Math.min(cz, options.chatThreshold), audio.z[i], options.chatThreshold, options.audioThreshold)
   );
 
-  const chatSpikes = detectSpikes(chat.z, "chat", { threshold: options.chatThreshold, mergeGapBins: 1 });
+  // A z-score alone can't tell a burst from three messages in a dead chat;
+  // bins below the absolute rate floor are held under the threshold.
+  const chatZGated = chat.z.map((z, i) => (chatSmoothed[i] >= options.minChatPerMin ? z : Math.min(z, options.chatThreshold)));
+  const chatSpikes = detectSpikes(chatZGated, "chat", { threshold: options.chatThreshold, mergeGapBins: 1 });
   const audioSpikes = dropSustainedSpikes(
     detectSpikes(audio.z, "audio", { threshold: options.audioThreshold, mergeGapBins: 1 }),
     audio.peakDb

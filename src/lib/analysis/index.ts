@@ -69,6 +69,9 @@ export function analyze(input: AnalyzeInput): AnalysisResult {
     scaleFloorFraction: 0.2,
     // At least ~3 msg/min of spread so near-silent chats don't trigger on one message.
     scaleFloorAbsolute: 3,
+    // Message counts are Poisson: a bin at rate r msg/min holds r/6 messages
+    // with sd sqrt(r/6), i.e. sqrt(6r) msg/min, ~sqrt(2r) after smoothing.
+    scaleFloorForBaseline: (b) => Math.sqrt(2 * Math.max(0, b)),
   });
   // Loudness shifts level between stream phases (menus, gameplay, breaks),
   // so each slice is compared with the level just before it rather than a
@@ -84,6 +87,8 @@ export function analyze(input: AnalyzeInput): AnalysisResult {
     // cap keeps a noisy mix (gunfire, music) from hiding a genuine +7 dB jump.
     scaleFloorAbsolute: 1.5,
     scaleCapAbsolute: 3,
+    // Coming out of silence (stream start, a muted segment) is not a moment.
+    floorValue: -60,
   });
   const audio = maxPerBin(fine, fineDb, audioDb.length, step, bin);
 

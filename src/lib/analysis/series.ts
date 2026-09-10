@@ -152,6 +152,12 @@ export interface RobustZOptions {
   scaleFloorFraction?: number;
   /** Absolute floor for the scale estimate. */
   scaleFloorAbsolute?: number;
+  /**
+   * Per-bin floor derived from the local baseline, e.g. the Poisson noise of
+   * a count series (sqrt of the expected count) so a steady quiet chat isn't
+   * over-sensitive.
+   */
+  scaleFloorForBaseline?: (baseline: number) => number;
 }
 
 /**
@@ -171,7 +177,8 @@ export function robustZ(values: number[], opts: RobustZOptions): {
     globalSd * (opts.scaleFloorFraction ?? 0.25),
     1e-6
   );
-  const scale = mad.map((m) => Math.max(m * 1.4826, floor));
+  const perBin = opts.scaleFloorForBaseline;
+  const scale = mad.map((m, i) => Math.max(m * 1.4826, floor, perBin ? perBin(baseline[i]) : 0));
   const z = values.map((v, i) => (v - baseline[i]) / scale[i]);
   return { z, baseline, scale };
 }
@@ -205,6 +212,11 @@ export interface OnsetZOptions {
   scaleFloorAbsolute?: number;
   /** Absolute cap for the scale estimate, so a noisy signal cannot hide a large jump. */
   scaleCapAbsolute?: number;
+  /**
+   * Values at or below this level are treated as "nothing there" (silence);
+   * a jump out of it is a start, not a moment, and scores zero.
+   */
+  floorValue?: number;
 }
 
 /**
@@ -225,6 +237,14 @@ export function onsetZ(values: number[], opts: OnsetZOptions): {
   const floor = Math.max(opts.scaleFloorAbsolute ?? 0, 1e-6);
   const capValue = opts.scaleCapAbsolute ?? Infinity;
   const scale = mad.map((m) => Math.min(capValue, Math.max(m * 1.4826, floor)));
-  const z = residual.map((r, i) => r / scale[i]);
+  const warmup = Math.min(values.length, Math.max(1, Math.round(opts.baselineBins / 2)));
+  const floorValue = opts.floorValue ?? -Infinity;
+  // Any silence inside the baseline window makes the comparison meaningless.
+  let lastSilent = -Infinity;
+  const z = residual.map((r, i) => {
+    if (values[i] <= floorValue) lastSilent = i;
+    const unreliable = i < warmup || i - lastSilent <= opts.baselineBins || baseline[i] <= floorValue;
+    return unreliable ? 0 : r / scale[i];
+  });
   return { z, baseline, scale };
 }

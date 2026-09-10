@@ -193,6 +193,22 @@ describe("onset detection (audio)", () => {
     expect(z[90]).toBeGreaterThan(2);
     expect(z[100]).toBeLessThan(1); // baseline has caught up with the new level
   });
+  it("onsetZ ignores the warm-up and jumps out of silence", () => {
+    const values = new Array(60).fill(-90);
+    for (let i = 30; i < 60; i++) values[i] = -20; // stream starts
+    const { z } = onsetZ(values, { baselineBins: 6, scaleWindowBins: 30, scaleFloorAbsolute: 1.5, scaleCapAbsolute: 3, floorValue: -60 });
+    expect(z[0]).toBe(0);
+    expect(z[30]).toBe(0);
+    expect(Math.max(...z)).toBeLessThan(2.2);
+  });
+  it("robustZ applies a per-baseline floor", () => {
+    const values = new Array(100).fill(12);
+    values[50] = 18;
+    const plain = robustZ(values, { windowBins: 20, scaleFloorAbsolute: 1 });
+    const poisson = robustZ(values, { windowBins: 20, scaleFloorAbsolute: 1, scaleFloorForBaseline: (b) => Math.sqrt(2 * b) });
+    expect(plain.z[50]).toBeCloseTo(6, 5);
+    expect(poisson.z[50]).toBeCloseTo(6 / Math.sqrt(24), 5);
+  });
   it("dropSustainedSpikes removes level changes and keeps transients", () => {
     const db = new Array(60).fill(-24);
     for (let i = 20; i < 22; i++) db[i] = -12; // transient
